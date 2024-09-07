@@ -129,8 +129,8 @@ class PromptEncoder:
     if points is not None:
       coords, labels = points
       coords = coords + 0.5 # Shift to center pixel
-      coords = coords.cat(Tensor.zeros((coords.shape[0], 1, 2), device=coords.device))
-      labels = labels.cat(-Tensor.ones((labels.shape[0], 1), dtype=labels.dtype, device=labels.device))
+      coords = coords.cat(Tensor.zeros((coords.shape[0], 1, 2), device=coords.device), dim=1)
+      labels = labels.cat(-Tensor.ones((labels.shape[0], 1), dtype=labels.dtype, device=labels.device), dim=1)
       point_embedding = self.pe_layer.forward(coords, self.input_image_size)
       # NOTE: NotImplementedError: Advanced indexing setitem is not currently supported
       # TODO: Bounty for fix and test - rebranch and refactor
