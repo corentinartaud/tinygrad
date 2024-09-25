@@ -1407,6 +1407,10 @@ class TestOps(unittest.TestCase):
     with self.assertRaises((ValueError, RuntimeError)): Tensor.ones(4,3,1,6).expand(4,6,1,6)
     with self.assertRaises((ValueError, RuntimeError)): Tensor.ones(4,3,1,6).expand(3,1,6)
     with self.assertRaises((ValueError, RuntimeError)): Tensor.ones(4,3,2,6).expand(4,3,0,6)
+  
+  def test_nonzero(self):
+    tmp = np.random.randint(0, 2, (5, 6, 4, 4)).astype(float).tolist()
+    helper_test_op(None, lambda x: x.nonzero(as_tuple=False), lambda x: x.nonzero(), vals=[tmp], forward_only=True)
 
   @unittest.skip("very slow")
   def test_sd_big_conv(self):

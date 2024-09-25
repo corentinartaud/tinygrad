@@ -1338,6 +1338,17 @@ class Tensor:
                           rolled[tuple(slice(None) if i != dim else slice(None, -shift) for i in range(rolled.ndim))], dim=dim)
     return rolled
 
+  def nonzero(self, as_tuple:bool=False) -> Tensor:
+    """
+    Returns the indices of the elements of the tensor that are non-zero.
+    """
+    # NOTE: This is rediculously slow, but it works for now.
+    def _nonzero(t:Tensor, idx:List[int]) -> List:
+      if t.shape == (): return [tuple(idx)] if t.item() != 0 else []
+      else: return sum([_nonzero(_t, idx + [i]) for i, _t in enumerate(t)], [])
+    # TODO: implement as_tuple
+    return Tensor(_nonzero(self, []), dtype=dtypes.int64, device=self.device)
+
   # ***** reduce ops *****
 
   def _reduce(self, fxn:Type[Function], axis:Optional[Union[int, Sequence[int]]]=None, keepdim=False) -> Tensor:
