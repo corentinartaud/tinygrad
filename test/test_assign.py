@@ -2,6 +2,7 @@
 import unittest
 import numpy as np
 from tinygrad import dtypes, Tensor, TinyJit, GlobalCounters, Variable
+from tinygrad.device import is_dtype_supported
 
 N = 200  # has to be bigger than the cache to fail
 
@@ -349,7 +350,7 @@ class TestAssign(unittest.TestCase):
 
   def test_permuted_assignment_masked_view_possible(self):
     a = Tensor.ones(4, 4).contiguous().realize()
-    b = a.shrink((None, (0, 2))).pad((None, (0, 2)), 2)
+    b = a.shrink((None, (0, 2))).pad((None, (0, 2)), value=2)
     a.assign(a + b)
     kc = GlobalCounters.kernel_count
     a.realize()
@@ -359,11 +360,19 @@ class TestAssign(unittest.TestCase):
   def test_permuted_assignment_masked_view_not_contiguous(self):
     a = Tensor.ones(4, 4).contiguous().realize()
     with self.assertRaisesRegex(RuntimeError, "contiguous"):
-      b = a.shrink((None, (0, 2))).pad((None, (0, 2)), 2).permute(1, 0)
+      b = a.shrink((None, (0, 2))).pad((None, (0, 2)), value=2).permute(1, 0)
       a.assign(a + b)
       a.realize()
 
   # TODO: is there a way to sneak in a permute such that it returns the wrong answer?
+
+  @unittest.skipUnless(is_dtype_supported(dtypes.half), "need half")
+  def test_setitem_half(self):
+    a = Tensor.full((8,), 1.0, dtype=dtypes.half).contiguous().realize()
+    b = Tensor.full((4,), 2.0, dtype=dtypes.half).contiguous().realize()
+    assign = a[:4].assign(b)
+    assign.realize()
+    np.testing.assert_allclose(a.numpy(), [2., 2., 2., 2., 1., 1., 1., 1.])
 
   @unittest.skip("don't use output buffer, and mismatch dtype no longer supported")
   def test_cast_assignment(self):
